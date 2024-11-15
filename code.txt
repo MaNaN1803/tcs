@@ -1,77 +1,96 @@
 #include <iostream>
-#include <unordered_map>
 #include <vector>
-#include <queue>
+#include <unordered_map>
 using namespace std;
 
-int bfs(int start, int target, unordered_map<int, int>& board, vector<int>& dice_rolls) {
-    vector<bool> visited(101, false);
-    queue<int> q;
-    q.push(start);
-    visited[start] = true;
-    int roll_index = 0;
+class SnakesAndLadders {
+public:
+    unordered_map<int, int> board;
+    vector<int> dice_rolls;
+    int final_position;
 
-    while (!q.empty() && roll_index < dice_rolls.size()) {
-        int size = q.size();
-        while (size--) {
-            int current = q.front();
-            q.pop();
+    // Constructor to initialize the board and inputs
+    SnakesAndLadders(vector<pair<int, int>>& snakes_and_ladders, vector<int>& dice_rolls, int final_position) {
+        for (auto& sl : snakes_and_ladders) {
+            board[sl.first] = sl.second;
+        }
+        this->dice_rolls = dice_rolls;
+        this->final_position = final_position;
+    }
 
-            for (int i = 1; i <= dice_rolls[roll_index]; ++i) {
-                int next_pos = current + i;
-                if (next_pos > 100) break;
-                if (board.find(next_pos) != board.end()) next_pos = board[next_pos];
-                if (next_pos == target) return roll_index + 1;
-                if (!visited[next_pos]) {
-                    visited[next_pos] = true;
-                    q.push(next_pos);
-                }
+    // Function to simulate path based on current board configuration
+    int simulate_path(unordered_map<int, int>& board_copy) {
+        int current_pos = 1;
+        for (int roll : dice_rolls) {
+            current_pos += roll;
+            if (current_pos > 100) current_pos = 100; // Prevent going beyond 100
+            if (board_copy.find(current_pos) != board_copy.end()) {
+                current_pos = board_copy[current_pos];
             }
         }
-        roll_index++;
-    }
-    return -1;
-}
-
-string findFaultySnakeOrLadder(int N, vector<pair<int, int>>& snakes_and_ladders, vector<int>& dice_rolls, int final_position) {
-    unordered_map<int, int> board;
-    for (auto& sl : snakes_and_ladders) board[sl.first] = sl.second;
-
-    int original_reach = bfs(1, final_position, board, dice_rolls);
-    if (original_reach != -1) return "Not affected";
-
-    for (auto& sl : snakes_and_ladders) {
-        swap(board[sl.first], board[sl.second]);
-        if (bfs(1, final_position, board, dice_rolls) != -1)
-            return (sl.first > sl.second ? "Snake " : "Ladder ") + to_string(sl.second) + " " + to_string(sl.first);
-        swap(board[sl.first], board[sl.second]);
+        return current_pos;
     }
 
-    return "Not reachable";
-}
+    // Main function to solve the problem
+    string solve() {
+        // First check if the original path reaches the final position
+        unordered_map<int, int> original_board = board;
+        int original_end = simulate_path(original_board);
+        
+        if (original_end == final_position) {
+            return "Not affected";
+        }
+
+        // Try switching each snake/ladder
+        for (auto& [start, end] : board) {
+            unordered_map<int, int> modified_board = board;
+
+            bool is_snake = start > end; // Determine if it's a snake or ladder
+
+            if (is_snake) {
+                // Switch snake to ladder
+                modified_board[start] = start + (start - end); // Promote to higher value
+            } else {
+                // Switch ladder to snake
+                modified_board[start] = max(1, start - (end - start)); // Demote to lower value
+            }
+
+            // Simulate path with modified board
+            int modified_end = simulate_path(modified_board);
+
+            if (modified_end == final_position) {
+                return is_snake ? "Snake " + to_string(start) + " " + to_string(end)
+                                : "Ladder " + to_string(start) + " " + to_string(end);
+            }
+        }
+
+        return "Not reachable";
+    }
+};
 
 int main() {
-    int N;
+    // Input example 1
+    int N; 
     cin >> N;
-
-    vector<pair<int, int>> snakes_and_ladders(N);
-    for (int i = 0; i < N; ++i)
-        cin >> snakes_and_ladders[i].first >> snakes_and_ladders[i].second;
-
-    vector<int> dice_rolls;
-    string rolls_input;
-    cin.ignore();
-    getline(cin, rolls_input);
     
-    istringstream ss(rolls_input);
-    int roll;
-    while (ss >> roll)
-        dice_rolls.push_back(roll);
-
-    int final_position;
-    cin >> final_position;
-
-    cout << findFaultySnakeOrLadder(N, snakes_and_ladders, dice_rolls, final_position) << endl;
+    vector<pair<int, int>> snakes_and_ladders(N);
+    
+    for(int i = 0; i < N; i++) {
+        cin >> snakes_and_ladders[i].first >> snakes_and_ladders[i].second;
+    }
+    
+    vector<int> dice_rolls;
+    
+    string temp;
+    while(cin >> temp && isdigit(temp[0])) {
+        dice_rolls.push_back(stoi(temp));
+    }
+    
+    int final_position = stoi(temp);
+    
+    SnakesAndLadders game(snakes_and_ladders, dice_rolls, final_position);
+    
+    cout << game.solve() << endl;
 
     return 0;
 }
