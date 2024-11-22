@@ -6,7 +6,8 @@ def solve(N, Q, ops):
             if k in kv:
                 val, f = kv[k]
                 fq[f].remove(k)
-                if not fq[f] and f == mf: mf += 1
+                if not fq[f] and f == mf:
+                    mf += 1
                 kv[k] = (val, f + 1)
                 fq[f + 1].add(k)
                 res.append(val)
@@ -17,14 +18,16 @@ def solve(N, Q, ops):
             if k in kv:
                 _, f = kv[k]
                 fq[f].remove(k)
-                if not fq[f] and f == mf: mf += 1
+                if not fq[f] and f == mf:
+                    mf += 1
                 kv[k] = (v, f + 1)
                 fq[f + 1].add(k)
             else:
                 if len(kv) == N:
                     r = min(fq[mf])
                     fq[mf].remove(r)
-                    if not fq[mf]: fq.pop(mf)
+                    if not fq[mf]:
+                        fq.pop(mf)
                     kv.pop(r)
                 kv[k], mf = (v, 1), 1
                 fq[1].add(k)
