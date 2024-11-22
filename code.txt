@@ -1,47 +1,31 @@
-def solve(N, Q, operations):
-    from collections import defaultdict
-    
-    keyValueFreq = {}
-    freqToKeys = defaultdict(set)
-    minFreq = 0
-    results = []
-
+from collections import defaultdict
+kv, fq, mf, res = {}, defaultdict(set), 0, []
     for op in operations:
         if op[0] == 1:
-            key = op[1]
-            if key not in keyValueFreq:
-                results.append(-1)
+            k = op[1]
+            if k not in kv:
+                res.append(-1)
             else:
-                value, freq = keyValueFreq[key]
-                freqToKeys[freq].remove(key)
-                if not freqToKeys[freq] and freq == minFreq:
-                    minFreq += 1
-                keyValueFreq[key] = (value, freq + 1)
-                freqToKeys[freq + 1].add(key)
-                results.append(value)
-        elif op[0] == 2:
-            key, value = op[1], op[2]
-            if key in keyValueFreq:
-                _, freq = keyValueFreq[key]
-                freqToKeys[freq].remove(key)
-                if not freqToKeys[freq] and freq == minFreq:
-                    minFreq += 1
-                keyValueFreq[key] = (value, freq + 1)
-                freqToKeys[freq + 1].add(key)
+                v, f = kv[k]
+                fq[f].remove(k)
+                if not fq[f] and f == mf: mf += 1
+                kv[k] = (v, f + 1)
+                fq[f + 1].add(k)
+                res.append(v)
+        else:
+            k, v = op[1], op[2]
+            if k in kv:
+                _, f = kv[k]
+                fq[f].remove(k)
+                if not fq[f] and f == mf: mf += 1
+                kv[k] = (v, f + 1)
+                fq[f + 1].add(k)
             else:
-                if len(keyValueFreq) >= N:
-                    toRemove = min(freqToKeys[minFreq])
-                    freqToKeys[minFreq].remove(toRemove)
-                    if not freqToKeys[minFreq]:
-                        freqToKeys.pop(minFreq)
-                    keyValueFreq.pop(toRemove)
-                keyValueFreq[key] = (value, 1)
-                freqToKeys[1].add(key)
-                minFreq = 1
-    return results
-
-N = int(input())
-Q = int(input())
-operations = [list(map(int, input().split())) for _ in range(Q)]
-out = solve(N, Q, operations)
-print(' '.join(map(str, out)))
+                if len(kv) >= N:
+                    r = min(fq[mf])
+                    fq[mf].remove(r)
+                    if not fq[mf]: fq.pop(mf)
+                    kv.pop(r)
+                kv[k], mf = (v, 1), 1
+                fq[1].add(k)
+    return res
