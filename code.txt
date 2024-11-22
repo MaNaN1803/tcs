@@ -32,6 +32,3 @@ def solve(N, Q, ops):
                 kv[k], mf = (v, 1), 1
                 fq[1].add(k)
     return res
-
-N, Q = int(input()), int(input())
-print(' '.join(map(str, solve(N, Q, [list(map(int, input().split())) for _ in range(Q)]))))
