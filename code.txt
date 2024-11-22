@@ -1,19 +1,19 @@
-from collections import defaultdict
-kv, fq, mf, res = {}, defaultdict(set), 0, []
-    for op in operations:
-        if op[0] == 1:
-            k = op[1]
-            if k not in kv:
-                res.append(-1)
-            else:
-                v, f = kv[k]
+def solve(N, Q, ops):
+    from collections import defaultdict
+    kv, fq, mf, res = {}, defaultdict(set), 0, []
+    for t, k, *v in ops:
+        if t == 1:
+            if k in kv:
+                val, f = kv[k]
                 fq[f].remove(k)
                 if not fq[f] and f == mf: mf += 1
-                kv[k] = (v, f + 1)
+                kv[k] = (val, f + 1)
                 fq[f + 1].add(k)
-                res.append(v)
+                res.append(val)
+            else:
+                res.append(-1)
         else:
-            k, v = op[1], op[2]
+            v = v[0]
             if k in kv:
                 _, f = kv[k]
                 fq[f].remove(k)
@@ -21,7 +21,7 @@ kv, fq, mf, res = {}, defaultdict(set), 0, []
                 kv[k] = (v, f + 1)
                 fq[f + 1].add(k)
             else:
-                if len(kv) >= N:
+                if len(kv) == N:
                     r = min(fq[mf])
                     fq[mf].remove(r)
                     if not fq[mf]: fq.pop(mf)
@@ -29,3 +29,6 @@ kv, fq, mf, res = {}, defaultdict(set), 0, []
                 kv[k], mf = (v, 1), 1
                 fq[1].add(k)
     return res
+
+N, Q = int(input()), int(input())
+print(' '.join(map(str, solve(N, Q, [list(map(int, input().split())) for _ in range(Q)]))))
