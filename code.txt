@@ -1,51 +1,47 @@
+def solve(N, Q, operations):
+    from collections import defaultdict
+    
+    keyValueFreq = {}
+    freqToKeys = defaultdict(set)
+    minFreq = 0
+    results = []
 
-unordered_map<int, pair<int, int>> keyValueFreq;
-    unordered_map<int, set<int>> freqToKeys;
-    unordered_map<int, set<int>::iterator> keyIter;
-    vector<int> results;
-    int minFreq = 0;
+    for op in operations:
+        if op[0] == 1:
+            key = op[1]
+            if key not in keyValueFreq:
+                results.append(-1)
+            else:
+                value, freq = keyValueFreq[key]
+                freqToKeys[freq].remove(key)
+                if not freqToKeys[freq] and freq == minFreq:
+                    minFreq += 1
+                keyValueFreq[key] = (value, freq + 1)
+                freqToKeys[freq + 1].add(key)
+                results.append(value)
+        elif op[0] == 2:
+            key, value = op[1], op[2]
+            if key in keyValueFreq:
+                _, freq = keyValueFreq[key]
+                freqToKeys[freq].remove(key)
+                if not freqToKeys[freq] and freq == minFreq:
+                    minFreq += 1
+                keyValueFreq[key] = (value, freq + 1)
+                freqToKeys[freq + 1].add(key)
+            else:
+                if len(keyValueFreq) >= N:
+                    toRemove = min(freqToKeys[minFreq])
+                    freqToKeys[minFreq].remove(toRemove)
+                    if not freqToKeys[minFreq]:
+                        freqToKeys.pop(minFreq)
+                    keyValueFreq.pop(toRemove)
+                keyValueFreq[key] = (value, 1)
+                freqToKeys[1].add(key)
+                minFreq = 1
+    return results
 
-    for (auto &op : operations) {
-        int type = op[0], key = op[1];
-        if (type == 1) {
-            if (keyValueFreq.find(key) == keyValueFreq.end()) {
-                results.push_back(-1);
-            } else {
-                int value = keyValueFreq[key].first, freq = keyValueFreq[key].second;
-                freqToKeys[freq].erase(keyIter[key]);
-                if (freqToKeys[freq].empty() && freq == minFreq) minFreq++;
-                keyValueFreq[key].second++;
-                freqToKeys[freq + 1].insert(key);
-                keyIter[key] = freqToKeys[freq + 1].find(key);
-                results.push_back(value);
-            }
-        } else {
-            int value = op[2];
-            if (keyValueFreq.find(key) != keyValueFreq.end()) {
-                int freq = keyValueFreq[key].second;
-                keyValueFreq[key].first = value;
-                freqToKeys[freq].erase(keyIter[key]);
-                if (freqToKeys[freq].empty() && freq == minFreq) minFreq++;
-                keyValueFreq[key].second++;
-                freqToKeys[freq + 1].insert(key);
-                keyIter[key] = freqToKeys[freq + 1].find(key);
-            } else {
-                if (keyValueFreq.size() >= N) {
-                    int toRemove = *freqToKeys[minFreq].begin();
-                    freqToKeys[minFreq].erase(freqToKeys[minFreq].begin());
-                    if (freqToKeys[minFreq].empty()) freqToKeys.erase(minFreq);
-                    keyValueFreq.erase(toRemove);
-                    keyIter.erase(toRemove);
-                }
-                keyValueFreq[key] = {value, 1};
-                freqToKeys[1].insert(key);
-                keyIter[key] = freqToKeys[1].find(key);
-                minFreq = 1;
-            }
-        }
-    }
-    return results;
-}
-
-
- 
+N = int(input())
+Q = int(input())
+operations = [list(map(int, input().split())) for _ in range(Q)]
+out = solve(N, Q, operations)
+print(' '.join(map(str, out)))
