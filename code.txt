@@ -1,96 +1,51 @@
-#include <iostream>
-#include <vector>
-#include <unordered_map>
-using namespace std;
 
-class SnakesAndLadders {
-public:
-    unordered_map<int, int> board;
-    vector<int> dice_rolls;
-    int final_position;
+unordered_map<int, pair<int, int>> keyValueFreq;
+    unordered_map<int, set<int>> freqToKeys;
+    unordered_map<int, set<int>::iterator> keyIter;
+    vector<int> results;
+    int minFreq = 0;
 
-    // Constructor to initialize the board and inputs
-    SnakesAndLadders(vector<pair<int, int>>& snakes_and_ladders, vector<int>& dice_rolls, int final_position) {
-        for (auto& sl : snakes_and_ladders) {
-            board[sl.first] = sl.second;
-        }
-        this->dice_rolls = dice_rolls;
-        this->final_position = final_position;
-    }
-
-    // Function to simulate path based on current board configuration
-    int simulate_path(unordered_map<int, int>& board_copy) {
-        int current_pos = 1;
-        for (int roll : dice_rolls) {
-            current_pos += roll;
-            if (current_pos > 100) current_pos = 100; // Prevent going beyond 100
-            if (board_copy.find(current_pos) != board_copy.end()) {
-                current_pos = board_copy[current_pos];
-            }
-        }
-        return current_pos;
-    }
-
-    // Main function to solve the problem
-    string solve() {
-        // First check if the original path reaches the final position
-        unordered_map<int, int> original_board = board;
-        int original_end = simulate_path(original_board);
-        
-        if (original_end == final_position) {
-            return "Not affected";
-        }
-
-        // Try switching each snake/ladder
-        for (auto& [start, end] : board) {
-            unordered_map<int, int> modified_board = board;
-
-            bool is_snake = start > end; // Determine if it's a snake or ladder
-
-            if (is_snake) {
-                // Switch snake to ladder
-                modified_board[start] = start + (start - end); // Promote to higher value
+    for (auto &op : operations) {
+        int type = op[0], key = op[1];
+        if (type == 1) {
+            if (keyValueFreq.find(key) == keyValueFreq.end()) {
+                results.push_back(-1);
             } else {
-                // Switch ladder to snake
-                modified_board[start] = max(1, start - (end - start)); // Demote to lower value
+                int value = keyValueFreq[key].first, freq = keyValueFreq[key].second;
+                freqToKeys[freq].erase(keyIter[key]);
+                if (freqToKeys[freq].empty() && freq == minFreq) minFreq++;
+                keyValueFreq[key].second++;
+                freqToKeys[freq + 1].insert(key);
+                keyIter[key] = freqToKeys[freq + 1].find(key);
+                results.push_back(value);
             }
-
-            // Simulate path with modified board
-            int modified_end = simulate_path(modified_board);
-
-            if (modified_end == final_position) {
-                return is_snake ? "Snake " + to_string(start) + " " + to_string(end)
-                                : "Ladder " + to_string(start) + " " + to_string(end);
+        } else {
+            int value = op[2];
+            if (keyValueFreq.find(key) != keyValueFreq.end()) {
+                int freq = keyValueFreq[key].second;
+                keyValueFreq[key].first = value;
+                freqToKeys[freq].erase(keyIter[key]);
+                if (freqToKeys[freq].empty() && freq == minFreq) minFreq++;
+                keyValueFreq[key].second++;
+                freqToKeys[freq + 1].insert(key);
+                keyIter[key] = freqToKeys[freq + 1].find(key);
+            } else {
+                if (keyValueFreq.size() >= N) {
+                    int toRemove = *freqToKeys[minFreq].begin();
+                    freqToKeys[minFreq].erase(freqToKeys[minFreq].begin());
+                    if (freqToKeys[minFreq].empty()) freqToKeys.erase(minFreq);
+                    keyValueFreq.erase(toRemove);
+                    keyIter.erase(toRemove);
+                }
+                keyValueFreq[key] = {value, 1};
+                freqToKeys[1].insert(key);
+                keyIter[key] = freqToKeys[1].find(key);
+                minFreq = 1;
             }
         }
-
-        return "Not reachable";
     }
-};
-
-int main() {
-    // Input example 1
-    int N; 
-    cin >> N;
-    
-    vector<pair<int, int>> snakes_and_ladders(N);
-    
-    for(int i = 0; i < N; i++) {
-        cin >> snakes_and_ladders[i].first >> snakes_and_ladders[i].second;
-    }
-    
-    vector<int> dice_rolls;
-    
-    string temp;
-    while(cin >> temp && isdigit(temp[0])) {
-        dice_rolls.push_back(stoi(temp));
-    }
-    
-    int final_position = stoi(temp);
-    
-    SnakesAndLadders game(snakes_and_ladders, dice_rolls, final_position);
-    
-    cout << game.solve() << endl;
-
-    return 0;
+    return results;
 }
+
+
+ 
